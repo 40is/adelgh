@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Σημαντική Ερώτηση</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      max-width: 420px;
+      width: 90%;
+      animation: popIn 0.4s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    #box h1 {
+      font-size: 1.7rem;
+      color: #1a1a2e;
+      margin-bottom: 12px;
+    }
+
+    #warning {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    .btns {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #yesBtn {
+      background: #27ae60;
+      color: #fff;
+      border: none;
+      padding: 14px 36px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #yesBtn:hover { background: #219150; }
+
+    #noBtn {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 14px 36px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      position: fixed;
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    #noBtn.shaking {
+      animation: shake 0.4s;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-8px); }
+      75%      { transform: translateX(8px); }
+    }
+
+    #successMsg {
+      display: none;
+      font-size: 1.3rem;
+      color: #27ae60;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="overlay">
+  <div id="box">
+    <h1>Είσαι αδερφή;</h1>
+    <p id="warning">Σκέψου καλά πριν απαντήσεις... 🤔</p>
+    <div class="btns">
+      <button id="yesBtn" onclick="pressYes()">Ναι</button>
+      <button id="noBtn">Όχι</button>
+    </div>
+    <p id="successMsg">✅ Σωστή απάντηση! Μπράβο!</p>
+  </div>
+</div>
+
+<script>
+  const noBtn  = document.getElementById('noBtn');
+  const yesBtn = document.getElementById('yesBtn');
+  const overlay = document.getElementById('overlay');
+  const warning = document.getElementById('warning');
+  const successMsg = document.getElementById('successMsg');
+
+  let noCount = 0;
+  const noMessages = [
+    'Σκέψου καλά πριν απαντήσεις... 🤔',
+    'Σίγουρος/η; 🤨',
+    'Ξανασκέψου το... 😏',
+    'Μην κάνεις λάθος τώρα 😂',
+    'Δεν φεύγεις από εδώ χωρίς το Ναι! 😈',
+    'Το ξέρεις και εσύ ότι είσαι 🐸',
+  ];
+
+  // --- Κουμπί "Όχι" που ξεφεύγει ---
+  function moveNoBtn() {
+    const margin = 60;
+    const maxX = window.innerWidth  - noBtn.offsetWidth  - margin;
+    const maxY = window.innerHeight - noBtn.offsetHeight - margin;
+    const x = Math.floor(Math.random() * maxX) + margin / 2;
+    const y = Math.floor(Math.random() * maxY) + margin / 2;
+    noBtn.style.left = x + 'px';
+    noBtn.style.top  = y + 'px';
+  }
+
+  // Αρχική θέση
+  window.addEventListener('load', () => {
+    noBtn.style.left = '50%';
+    noBtn.style.top  = '60%';
+  });
+
+  // Desktop: mousemove
+  noBtn.addEventListener('mouseover', () => {
+    noCount++;
+    moveNoBtn();
+    warning.textContent = noMessages[Math.min(noCount - 1, noMessages.length - 1)];
+    noBtn.classList.remove('shaking');
+    void noBtn.offsetWidth; // reflow για να ξαναπαίξει το animation
+    noBtn.classList.add('shaking');
+  });
+
+  // Mobile: touchstart
+  noBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    noCount++;
+    moveNoBtn();
+    warning.textContent = noMessages[Math.min(noCount - 1, noMessages.length - 1)];
+  }, { passive: false });
+
+  // Αν κατά τύχη πατηθεί το "Όχι" (π.χ. keyboard) → fullscreen
+  noBtn.addEventListener('click', () => {
+    tryFullscreen();
+  });
+
+  function tryFullscreen() {
+    const el = document.documentElement;
+    if (el.requestFullscreen)            el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+    else if (el.msRequestFullscreen)     el.msRequestFullscreen();
+  }
+
+  // Μπλοκάρισμα Escape / F11 / Ctrl+W / Alt+F4
+  document.addEventListener('keydown', (e) => {
+    const blocked = ['Escape','F11','F4'];
+    if (blocked.includes(e.key)) { e.preventDefault(); e.stopPropagation(); }
+    if ((e.ctrlKey || e.metaKey) && ['w','W','q','Q'].includes(e.key)) {
+      e.preventDefault(); e.stopPropagation();
+    }
+    if (e.altKey && e.key === 'F4') { e.preventDefault(); }
+  }, true);
+
+  // Fullscreen exit → ξαναμπαίνει
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && overlay.style.display !== 'none') {
+      setTimeout(tryFullscreen, 300);
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement && overlay.style.display !== 'none') {
+      setTimeout(tryFullscreen, 300);
+    }
+  });
+
+  // Μπλοκάρισμα δεξί κλικ
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // Πάτημα "Ναι"
+  function pressYes() {
+    successMsg.style.display = 'block';
+    yesBtn.disabled = true;
+    setTimeout(() => {
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.5s';
+      setTimeout(() => { overlay.style.display = 'none'; }, 500);
+    }, 800);
+  }
+</script>
+</body>
+</html>
